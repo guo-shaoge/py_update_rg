@@ -106,18 +106,18 @@ def _handle_by_arg(only_show, ori, new):
     else:
         print('unexpected only_show param, got {}'.format(only_show))
 
-def change_by_cluster_id(clusterid, new_fillrate, only_show = ''):
+def by_cluster_id(clusterid, new_fillrate, only_show = ''):
     keyspace = _fetch_one_keyspace(clusterid)
     rg_json = _get_resource_group_by_keyspace_id(keyspace['id'])
     new_rg_json = _change_resource_group(rg_json, new_fillrate)
     _handle_by_arg(only_show, rg_json, new_rg_json)
 
-def change_by_keyspace(keyspace_id, new_fillrate, only_show = ''):
+def by_keyspace(keyspace_id, new_fillrate, only_show = ''):
     rg_json = _get_resource_group_by_keyspace_id(keyspace_id)
     new_rg_json = _change_resource_group(rg_json, new_fillrate)
     _handle_by_arg(only_show, rg_json, new_rg_json)
 
-def change_by_all_keyspaces(new_fillrate, only_show = ''):
+def by_all_keyspaces(new_fillrate, only_show = ''):
     keyspaces = _fetch_all_keyspaces()
     new_rg_jsons = []
     rg_jsons = []
