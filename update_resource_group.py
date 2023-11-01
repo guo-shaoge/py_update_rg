@@ -14,7 +14,7 @@ def _check_http_resp(resp, stop = True):
         if stop:
             exit()
 
-def _fetch_n_keyspaces(num):
+def _fetch_n_keyspaces(beg, end):
     # curl http://127.0.0.1:2379/pd/api/v2/keyspaces?limit=10
     # {
     #     "keyspaces": [
@@ -41,12 +41,16 @@ def _fetch_n_keyspaces(num):
         _check_http_resp(resp)
         res_json = resp.json()
         keyspaces.extend(res_json['keyspaces'])
-        if ('next_page_token' not in res_json) or (num >= 0 and len(keyspaces) >= num):
+        if ('next_page_token' not in res_json) or (beg >= 0 and end >= 0 and len(keyspaces) > end):
             break
         else:
             page_token = res_json['next_page_token']
 
-    n_keyspaces = keyspaces[:num]
+    n_keyspaces = []
+    if beg < 0 or end < 0:
+        n_keyspaces = keyspaces[beg:]
+    else:
+        n_keyspaces = keyspaces[beg:end]
     return n_keyspaces
 
 def _fetch_one_keyspace(cluster_id):
@@ -69,7 +73,7 @@ def _fetch_one_keyspace(cluster_id):
     _check_http_resp(resp)
     return resp.json()
 
-def _get_resource_group_by_keyspace_id(keyspace_id):
+def _get_resource_group_by_keyspace_id(keyspace_id, stop = True)
     # curl -s 127.0.0.1:2379/resource-manager/api/v1/config/group/640055
     # {
     #   "name": "64005",
@@ -90,7 +94,7 @@ def _get_resource_group_by_keyspace_id(keyspace_id):
     #   "priority": 0
     # }
     resp = requests.get(g_pd_rc_url + str(keyspace_id))
-    _check_http_resp(resp, False)
+    _check_http_resp(resp, stop)
     return resp.json()
 
 def _change_resource_group(rg_json, new_fillrate):
@@ -114,6 +118,10 @@ def _handle_by_arg(only_show, ori, new):
     else:
         print('unexpected only_show param, got {}'.format(only_show))
 
+def fetch_n_keyspaces(beg=0, end=-1):
+    keyspaces = _fetch_n_keyspaces(beg, end)
+    print(keyspaces, indent=2)
+
 def by_cluster_id(clusterid, new_fillrate, only_show = ''):
     keyspace = _fetch_one_keyspace(clusterid)
     rg_json = _get_resource_group_by_keyspace_id(keyspace['id'])
@@ -125,12 +133,12 @@ def by_keyspace(keyspace_id, new_fillrate, only_show = ''):
     new_rg_json = _change_resource_group(rg_json, new_fillrate)
     _handle_by_arg(only_show, rg_json, new_rg_json)
 
-def by_n_keyspaces(new_fillrate, num, only_show = ''):
-    keyspaces = _fetch_n_keyspaces(num)
+def by_n_keyspaces(beg=0, end=-1, new_fillrate, only_show = ''):
+    keyspaces = _fetch_n_keyspaces(beg, end)
     new_rg_jsons = []
     rg_jsons = []
     for keyspace in keyspaces:
-        rg_json = _get_resource_group_by_keyspace_id(keyspace['id'])
+        rg_json = _get_resource_group_by_keyspace_id(keyspace['id'], False)
         new_rg_json = _change_resource_group(rg_json, new_fillrate)
 
         rg_jsons.append(rg_json)

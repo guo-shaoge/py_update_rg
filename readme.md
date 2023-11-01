@@ -16,5 +16,5 @@ pip install fire
 ```
 3. show one resource group
 ```shell
-./update_resource_group.py by_n_keyspaces 1000 1 --only_show='both'
+./update_resource_group.py by_n_keyspaces 1 1000 --only_show='both'
 ```
