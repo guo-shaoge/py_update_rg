@@ -40,7 +40,7 @@ def _fetch_n_keyspaces(num):
         _check_http_resp(resp)
         res_json = resp.json()
         keyspaces.extend(res_json['keyspaces'])
-        if 'next_page_token' not in res_json or len(keyspaces) >= num:
+        if ('next_page_token' not in res_json) or (num >= 0 and len(keyspaces) >= num)
             break
         else:
             page_token = res_json['next_page_token']
@@ -102,12 +102,12 @@ def _put_new_rg(new_rg_json):
 
 def _handle_by_arg(only_show, ori, new):
     if only_show == 'new':
-        print(ori)
+        print(json.dump(ori, indent=2))
     elif only_show == 'ori':
-        print(new)
+        print(json.dump(new, indent=2))
     elif only_show == 'both':
-        print(ori)
-        print(new)
+        print(json.dump(ori, indent=2))
+        print(json.dump(new, indent=2))
     elif only_show == '':
         _put_new_rg(new)
     else:

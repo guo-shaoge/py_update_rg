@@ -14,3 +14,7 @@ pip install fire
 ./update_resource_group.py change_by_keyspaces 100 'show_new_rg'
 ./update_resource_group.py change_by_keyspaces 100 'show_ori_rg'
 ```
+3. show one resource group
+```shell
+./update_resource_group.py by_n_keyspaces 1000 1 --only_show='both'
+```
