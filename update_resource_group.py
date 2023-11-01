@@ -8,10 +8,11 @@ import fire
 g_pd_url = 'http://127.0.0.1:2379/pd/api/v2/keyspaces/'
 g_pd_rc_url = 'http://127.0.0.1:2379/resource-manager/api/v1/config/group/'
 
-def _check_http_resp(resp):
+def _check_http_resp(resp, stop = True):
     if resp.status_code != 200:
-        print('got http error. reason: {}, code: {}, text: {}, url: {}'.format(resp.reason, resp.status_code, resp.text, resp.url))
-        exit()
+        print('[ERROR] got http error. reason: {}, code: {}, text: {}, url: {}'.format(resp.reason, resp.status_code, resp.text, resp.url), file= sys.stderr)
+        if stop:
+            exit()
 
 def _fetch_n_keyspaces(num):
     # curl http://127.0.0.1:2379/pd/api/v2/keyspaces?limit=10
@@ -40,7 +41,7 @@ def _fetch_n_keyspaces(num):
         _check_http_resp(resp)
         res_json = resp.json()
         keyspaces.extend(res_json['keyspaces'])
-        if ('next_page_token' not in res_json) or (num >= 0 and len(keyspaces) >= num)
+        if ('next_page_token' not in res_json) or (num >= 0 and len(keyspaces) >= num):
             break
         else:
             page_token = res_json['next_page_token']
@@ -89,7 +90,7 @@ def _get_resource_group_by_keyspace_id(keyspace_id):
     #   "priority": 0
     # }
     resp = requests.get(g_pd_rc_url + str(keyspace_id))
-    _check_http_resp(resp)
+    _check_http_resp(resp, False)
     return resp.json()
 
 def _change_resource_group(rg_json, new_fillrate):
