@@ -8,11 +8,18 @@ import fire
 g_pd_url = 'http://127.0.0.1:2379/pd/api/v2/keyspaces/'
 g_pd_rc_url = 'http://127.0.0.1:2379/resource-manager/api/v1/config/group/'
 
+# return true if stop==False and got error
 def _check_http_resp(resp, stop = True):
     if resp.status_code != 200:
         print('[ERROR] got http error. reason: {}, code: {}, text: {}, url: {}'.format(resp.reason, resp.status_code, resp.text, resp.url), file= sys.stderr)
         if stop:
             exit()
+        else:
+            return True
+    return False
+
+def _beg_end_valid(beg, end):
+    return end >= beg and beg >= 0 and end >= 0
 
 def _fetch_n_keyspaces(beg, end):
     # curl http://127.0.0.1:2379/pd/api/v2/keyspaces?limit=10
@@ -41,14 +48,14 @@ def _fetch_n_keyspaces(beg, end):
         _check_http_resp(resp)
         res_json = resp.json()
         keyspaces.extend(res_json['keyspaces'])
-        if ('next_page_token' not in res_json) or (beg >= 0 and end >= 0 and len(keyspaces) > end):
+        if ('next_page_token' not in res_json) or (_beg_end_valid(beg, end) and len(keyspaces) > end):
             break
         else:
             page_token = res_json['next_page_token']
 
     n_keyspaces = []
-    if beg < 0 or end < 0:
-        n_keyspaces = keyspaces[beg:]
+    if not _beg_end_valid(beg, end):
+        n_keyspaces = keyspaces[:]
     else:
         n_keyspaces = keyspaces[beg:end]
     return n_keyspaces
@@ -73,7 +80,7 @@ def _fetch_one_keyspace(cluster_id):
     _check_http_resp(resp)
     return resp.json()
 
-def _get_resource_group_by_keyspace_id(keyspace_id, stop = True)
+def _get_resource_group_by_keyspace_id(keyspace_id, stop = True):
     # curl -s 127.0.0.1:2379/resource-manager/api/v1/config/group/640055
     # {
     #   "name": "64005",
@@ -94,8 +101,8 @@ def _get_resource_group_by_keyspace_id(keyspace_id, stop = True)
     #   "priority": 0
     # }
     resp = requests.get(g_pd_rc_url + str(keyspace_id))
-    _check_http_resp(resp, stop)
-    return resp.json()
+    got_err = _check_http_resp(resp, stop)
+    return resp.json(), got_err
 
 def _change_resource_group(rg_json, new_fillrate):
     rg_json['r_u_settings']['r_u']['settings']['fill_rate'] = new_fillrate
@@ -107,12 +114,12 @@ def _put_new_rg(new_rg_json):
 
 def _handle_by_arg(only_show, ori, new):
     if only_show == 'new':
-        print(json.dump(ori, indent=2))
+        print(json.dumps(ori, indent=2))
     elif only_show == 'ori':
-        print(json.dump(new, indent=2))
+        print(json.dumps(new, indent=2))
     elif only_show == 'both':
-        print(json.dump(ori, indent=2))
-        print(json.dump(new, indent=2))
+        print(json.dumps(ori, indent=2))
+        print(json.dumps(new, indent=2))
     elif only_show == '':
         _put_new_rg(new)
     else:
@@ -120,25 +127,27 @@ def _handle_by_arg(only_show, ori, new):
 
 def fetch_n_keyspaces(beg=0, end=-1):
     keyspaces = _fetch_n_keyspaces(beg, end)
-    print(keyspaces, indent=2)
+    print(json.dumps(keyspaces, indent=2))
 
 def by_cluster_id(clusterid, new_fillrate, only_show = ''):
     keyspace = _fetch_one_keyspace(clusterid)
-    rg_json = _get_resource_group_by_keyspace_id(keyspace['id'])
+    rg_json, go_err = _get_resource_group_by_keyspace_id(keyspace['id'])
     new_rg_json = _change_resource_group(rg_json, new_fillrate)
     _handle_by_arg(only_show, rg_json, new_rg_json)
 
 def by_keyspace(keyspace_id, new_fillrate, only_show = ''):
-    rg_json = _get_resource_group_by_keyspace_id(keyspace_id)
+    rg_json, got_err = _get_resource_group_by_keyspace_id(keyspace_id)
     new_rg_json = _change_resource_group(rg_json, new_fillrate)
     _handle_by_arg(only_show, rg_json, new_rg_json)
 
-def by_n_keyspaces(beg=0, end=-1, new_fillrate, only_show = ''):
+def by_n_keyspaces(new_fillrate, beg=0, end=-1, only_show = ''):
     keyspaces = _fetch_n_keyspaces(beg, end)
     new_rg_jsons = []
     rg_jsons = []
     for keyspace in keyspaces:
-        rg_json = _get_resource_group_by_keyspace_id(keyspace['id'], False)
+        rg_json, got_err = _get_resource_group_by_keyspace_id(keyspace['id'], False)
+        if got_err:
+            continue
         new_rg_json = _change_resource_group(rg_json, new_fillrate)
 
         rg_jsons.append(rg_json)
