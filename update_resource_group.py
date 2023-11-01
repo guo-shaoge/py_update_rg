@@ -39,7 +39,7 @@ def _fetch_n_keyspaces(num):
         resp = requests.get(g_pd_url, params = pd_params, timeout = 2)
         _check_http_resp(resp)
         res_json = resp.json()
-        keyspaces.append(res_json['keyspaces'])
+        keyspaces.extend(res_json['keyspaces'])
         if 'next_page_token' not in res_json or len(keyspaces) >= num:
             break
         else:
