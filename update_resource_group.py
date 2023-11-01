@@ -13,7 +13,7 @@ def _check_http_resp(resp):
         print('got http error. reason: {}, code: {}, text: {}, url: {}'.format(resp.reason, resp.status_code, resp.text, resp.url))
         exit()
 
-def _fetch_all_keyspaces():
+def _fetch_n_keyspaces(num):
     # curl http://127.0.0.1:2379/pd/api/v2/keyspaces?limit=10
     # {
     #     "keyspaces": [
@@ -30,19 +30,21 @@ def _fetch_all_keyspaces():
     #     ],
     #     "next_page_token": "2"
     # }
-    all_keyspaces = []
+    keyspaces = []
     page_token = ''
     while True:
         pd_params = {'limit': '1000', 'page_token': page_token}
         resp = requests.get(g_pd_url, params = pd_params, timeout = 2)
         _check_http_resp(resp)
         res_json = resp.json()
-        all_keyspaces.append(res_json['keyspaces'])
-        if 'next_page_token' not in res_json:
+        keyspaces.append(res_json['keyspaces'])
+        if 'next_page_token' not in res_json or len(keyspaces) >= num:
             break
         else:
             page_token = res_json['next_page_token']
-    return all_keyspaces
+
+    n_keyspaces = keyspaces[:num]
+    return n_keyspaces
 
 def _fetch_one_keyspace(cluster_id):
     # curl 127.0.0.1:2379/pd/api/v2/keyspaces/uRkenLDNeAmDKjC
@@ -101,6 +103,9 @@ def _handle_by_arg(only_show, ori, new):
         print(ori)
     elif only_show == 'show_new_rg':
         print(new)
+    elif only_show == 'show_both':
+        print(ori)
+        print(new)
     elif only_show == '':
         _put_new_rg(new)
     else:
@@ -117,8 +122,8 @@ def by_keyspace(keyspace_id, new_fillrate, only_show = ''):
     new_rg_json = _change_resource_group(rg_json, new_fillrate)
     _handle_by_arg(only_show, rg_json, new_rg_json)
 
-def by_all_keyspaces(new_fillrate, only_show = ''):
-    keyspaces = _fetch_all_keyspaces()
+def by_n_keyspaces(new_fillrate, num, only_show = ''):
+    keyspaces = _fetch_n_keyspaces(num)
     new_rg_jsons = []
     rg_jsons = []
     for keyspace in keyspaces:
