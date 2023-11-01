@@ -30,10 +30,19 @@ def _fetch_all_keyspaces():
     #     ],
     #     "next_page_token": "2"
     # }
-    pd_params = {'limit': '10'}
-    resp = requests.get(g_pd_url, params = pd_params)
-    _check_http_resp(resp)
-    return resp.json()['keyspaces']
+    all_keyspaces = []
+    page_token = ''
+    while True:
+        pd_params = {'limit': '1000', 'page_token': page_token}
+        resp = requests.get(g_pd_url, params = pd_params, timeout = 2)
+        _check_http_resp(resp)
+        res_json = resp.json()
+        all_keyspaces.append(res_json['keyspaces'])
+        if 'next_page_token' not in res_json:
+            break
+        else:
+            page_token = res_json['next_page_token']
+    return all_keyspaces
 
 def _fetch_one_keyspace(cluster_id):
     # curl 127.0.0.1:2379/pd/api/v2/keyspaces/uRkenLDNeAmDKjC
