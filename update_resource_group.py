@@ -99,11 +99,11 @@ def _put_new_rg(new_rg_json):
     _check_http_resp(resp)
 
 def _handle_by_arg(only_show, ori, new):
-    if only_show == 'show_new_rg':
+    if only_show == 'new':
         print(ori)
-    elif only_show == 'show_new_rg':
+    elif only_show == 'ori':
         print(new)
-    elif only_show == 'show_both':
+    elif only_show == 'both':
         print(ori)
         print(new)
     elif only_show == '':
