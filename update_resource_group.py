@@ -102,6 +102,8 @@ def _get_resource_group_by_keyspace_id(keyspace_id, stop = True):
     # }
     resp = requests.get(g_pd_rc_url + str(keyspace_id))
     got_err = _check_http_resp(resp, stop)
+    if got_err:
+        return '', got_err
     return resp.json(), got_err
 
 def _change_resource_group(rg_json, new_fillrate):
