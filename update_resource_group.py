@@ -33,7 +33,9 @@ def _fetch_n_keyspaces(num):
     keyspaces = []
     page_token = ''
     while True:
-        pd_params = {'limit': '1000', 'page_token': page_token}
+        pd_params = {'limit': '1000'}
+        if page_token != '':
+            pd_params['page_token'] = page_token
         resp = requests.get(g_pd_url, params = pd_params, timeout = 2)
         _check_http_resp(resp)
         res_json = resp.json()
