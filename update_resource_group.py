@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import copy
 import sys
 import requests
 import fire
@@ -107,8 +108,9 @@ def _get_resource_group_by_keyspace_id(keyspace_id, stop = True):
     return resp.json(), got_err
 
 def _change_resource_group(rg_json, new_fillrate):
-    rg_json['r_u_settings']['r_u']['settings']['fill_rate'] = new_fillrate
-    return rg_json
+    new_rg_json = copy.deepcopy(rg_json)
+    new_rg_json['r_u_settings']['r_u']['settings']['fill_rate'] = new_fillrate
+    return new_rg_json
 
 def _put_new_rg(new_rg_json):
     resp = requests.put(g_pd_rc_url, json=new_rg_json)
@@ -150,9 +152,9 @@ def by_n_keyspaces(new_fillrate, beg=0, end=-1, only_show = ''):
         rg_json, got_err = _get_resource_group_by_keyspace_id(keyspace['id'], False)
         if got_err:
             continue
-        new_rg_json = _change_resource_group(rg_json, new_fillrate)
-
         rg_jsons.append(rg_json)
+
+        new_rg_json = _change_resource_group(rg_json, new_fillrate)
         new_rg_jsons.append(new_rg_json)
     _handle_by_arg(only_show, rg_jsons, new_rg_jsons)
 
