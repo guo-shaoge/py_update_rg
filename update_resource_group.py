@@ -88,12 +88,14 @@ def _put_new_rg(new_rg_json):
     check_http_resp(resp)
 
 def _handle_by_arg(only_show, ori, new):
-    if only_show == 'ori'
+    if only_show == 'show_new_rg'
         print(ori)
-    else if only_show == 'new':
+    else if only_show == 'show_new_rg':
         print(new)
     else if only_show == '':
         _put_new_rg(new)
+    else:
+        print('unexpected only_show param, got {}'.format(only_show))
 
 def change_by_cluster_id(clusterid, new_fillrate, only_show = ''):
     keyspace = _fetch_one_keyspace(clusterid)
