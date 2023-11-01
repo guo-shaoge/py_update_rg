@@ -32,7 +32,7 @@ def _fetch_all_keyspaces():
     # }
     pd_params = {'limit': '10'}
     resp = requests.get(g_pd_url, params = pd_params)
-    check_http_resp(resp)
+    _check_http_resp(resp)
     return resp.json()['keyspaces']
 
 def _fetch_one_keyspace(cluster_id):
@@ -52,7 +52,7 @@ def _fetch_one_keyspace(cluster_id):
     #     }
     # }
     resp = requests.get(g_pd_url + cluster_id)
-    check_http_resp(resp)
+    _check_http_resp(resp)
     return resp.json()
 
 def _get_resource_group_by_keyspace_id(keyspace_id):
@@ -75,8 +75,8 @@ def _get_resource_group_by_keyspace_id(keyspace_id):
     #   },
     #   "priority": 0
     # }
-    resp = requests.get(g_pd_rc_url + keyspace_id)
-    check_http_resp(resp)
+    resp = requests.get(g_pd_rc_url + str(keyspace_id))
+    _check_http_resp(resp)
     return resp.json()
 
 def _change_resource_group(rg_json, new_fillrate):
@@ -85,14 +85,14 @@ def _change_resource_group(rg_json, new_fillrate):
 
 def _put_new_rg(new_rg_json):
     resp = requests.put(g_pd_rc_url, json=new_rg_json)
-    check_http_resp(resp)
+    _check_http_resp(resp)
 
 def _handle_by_arg(only_show, ori, new):
-    if only_show == 'show_new_rg'
+    if only_show == 'show_new_rg':
         print(ori)
-    else if only_show == 'show_new_rg':
+    elif only_show == 'show_new_rg':
         print(new)
-    else if only_show == '':
+    elif only_show == '':
         _put_new_rg(new)
     else:
         print('unexpected only_show param, got {}'.format(only_show))
@@ -103,8 +103,8 @@ def change_by_cluster_id(clusterid, new_fillrate, only_show = ''):
     new_rg_json = _change_resource_group(rg_json, new_fillrate)
     _handle_by_arg(only_show, rg_json, new_rg_json)
 
-def change_by_keyspace(keyspaceid, new_fillrate, only_show = ''):
-    rg_json = _get_resource_group_by_keyspace_id(keyspaceid)
+def change_by_keyspace(keyspace_id, new_fillrate, only_show = ''):
+    rg_json = _get_resource_group_by_keyspace_id(keyspace_id)
     new_rg_json = _change_resource_group(rg_json, new_fillrate)
     _handle_by_arg(only_show, rg_json, new_rg_json)
 
