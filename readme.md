@@ -22,3 +22,7 @@ pip install fire
 ```shell
 ./update_resource_group.py fetch_n_keyspaces --beg 500 --end 700
 ```
+5. get resource groups of keyspaces of [500, 1000)
+```shell
+./update_resource_group.py by_n_keyspaces 2000 --beg 50 --end 1000 --only_show='both'
+```

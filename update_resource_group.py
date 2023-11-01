@@ -118,9 +118,9 @@ def _put_new_rg(new_rg_json):
 
 def _handle_by_arg(only_show, ori, new):
     if only_show == 'new':
-        print(json.dumps(ori, indent=2))
-    elif only_show == 'ori':
         print(json.dumps(new, indent=2))
+    elif only_show == 'ori':
+        print(json.dumps(ori, indent=2))
     elif only_show == 'both':
         print(json.dumps(ori, indent=2))
         print(json.dumps(new, indent=2))
