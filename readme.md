@@ -1,8 +1,10 @@
 # Install third-party lib
+```shell
 apt-get install python3
 apt-get install python3-pip
 python3 -m pip install requests
 pip install fire
+```
 
 # Usage
 1. change fill_rate of resource group of all keyspaces to 100
