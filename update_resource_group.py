@@ -120,10 +120,10 @@ def _put_new_rg(new_rg_json):
 
 def _handle_by_arg(only_show, rg_jsons, new_fillrate):
     if only_show == 'new':
-        _change_resource_group(rg_jsons, new_fillrate)
-        print(json.dumps(new, indent=2))
+        rg_jsons = _change_resource_group(rg_jsons, new_fillrate)
+        print(json.dumps(rg_jsons, indent=2))
     elif only_show == 'ori':
-        print(json.dumps(ori, indent=2))
+        print(json.dumps(rg_jsons, indent=2))
     elif only_show == '':
         rg_jsons = _change_resource_group(rg_jsons, new_fillrate)
         _put_new_rg(rg_jsons)
@@ -154,7 +154,7 @@ def by_n_keyspaces(new_fillrate, beg=0, end=-1, only_show = ''):
         if got_err:
             continue
         rg_jsons.append(rg_json)
-        if len(rg_jsons) % 5000 == 0:
+        if len(rg_jsons) % 1000 == 0:
             print('[INFO] update rg json in mem process: ' + str(len(rg_jsons)), flush=True)
 
     print('[INFO] update rg json in mem done: ' + str(len(rg_jsons)), flush=True)
