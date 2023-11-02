@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import json
-import copy
 import sys
 import requests
 import fire
@@ -55,12 +54,14 @@ def _fetch_n_keyspaces(beg, end):
             page_token = res_json['next_page_token']
         if len(keyspaces) % 5000 == 0:
             print('[INFO] fetch n keyspaces process: ' + str(len(keyspaces)))
+            sys.stdout.flush()
 
     n_keyspaces = []
     if not _beg_end_valid(beg, end):
         n_keyspaces = keyspaces[:]
     else:
         n_keyspaces = keyspaces[beg:end]
+    print('[INFO] fetch n keyspaces done: all: {}, ret: {}'.format(str(len(keyspaces)), str(len(n_keyspaces))))
     return n_keyspaces
 
 def _fetch_one_keyspace(cluster_id):
@@ -109,25 +110,24 @@ def _get_resource_group_by_keyspace_id(keyspace_id, stop = True):
         return '', got_err
     return resp.json(), got_err
 
-def _change_resource_group(rg_json, new_fillrate):
-    new_rg_json = copy.deepcopy(rg_json)
-    new_rg_json['r_u_settings']['r_u']['settings']['fill_rate'] = new_fillrate
-    return new_rg_json
+def _change_resource_group(rg_jsons, new_fillrate):
+    for rg_json in rg_jsons:
+        rg_json['r_u_settings']['r_u']['settings']['fill_rate'] = new_fillrate
+    return rg_jsons
 
 def _put_new_rg(new_rg_json):
     resp = requests.put(g_pd_rc_url, json=new_rg_json)
     _check_http_resp(resp)
 
-def _handle_by_arg(only_show, ori, new):
+def _handle_by_arg(only_show, rg_jsons, new_fillrate):
     if only_show == 'new':
+        _change_resource_group(rg_jsons, new_fillrate)
         print(json.dumps(new, indent=2))
     elif only_show == 'ori':
         print(json.dumps(ori, indent=2))
-    elif only_show == 'both':
-        print(json.dumps(ori, indent=2))
-        print(json.dumps(new, indent=2))
     elif only_show == '':
-        _put_new_rg(new)
+        rg_jsons = _change_resource_group(rg_jsons, new_fillrate)
+        _put_new_rg(rg_jsons)
     else:
         print('unexpected only_show param, got {}'.format(only_show))
 
@@ -138,17 +138,16 @@ def fetch_n_keyspaces(beg=0, end=-1):
 def by_cluster_id(clusterid, new_fillrate, only_show = ''):
     keyspace = _fetch_one_keyspace(clusterid)
     rg_json, go_err = _get_resource_group_by_keyspace_id(keyspace['id'])
-    new_rg_json = _change_resource_group(rg_json, new_fillrate)
-    _handle_by_arg(only_show, rg_json, new_rg_json)
+    rg_jsons = [rg_json]
+    _handle_by_arg(only_show, rg_jsons, new_fillrate)
 
 def by_keyspace(keyspace_id, new_fillrate, only_show = ''):
     rg_json, got_err = _get_resource_group_by_keyspace_id(keyspace_id)
-    new_rg_json = _change_resource_group(rg_json, new_fillrate)
-    _handle_by_arg(only_show, rg_json, new_rg_json)
+    rg_jsons = [rg_json]
+    _handle_by_arg(only_show, rg_jsons, new_fillrate)
 
 def by_n_keyspaces(new_fillrate, beg=0, end=-1, only_show = ''):
     keyspaces = _fetch_n_keyspaces(beg, end)
-    new_rg_jsons = []
     rg_jsons = []
     for keyspace in keyspaces:
         rg_json, got_err = _get_resource_group_by_keyspace_id(keyspace['id'], False)
@@ -156,9 +155,8 @@ def by_n_keyspaces(new_fillrate, beg=0, end=-1, only_show = ''):
             continue
         rg_jsons.append(rg_json)
 
-        new_rg_json = _change_resource_group(rg_json, new_fillrate)
-        new_rg_jsons.append(new_rg_json)
-    _handle_by_arg(only_show, rg_jsons, new_rg_jsons)
+    print('[INFO] update rg json in mem done: ' + str(len(rg_json)))
+    _handle_by_arg(only_show, rg_jsons, new_fillrate)
 
 # check https://github.com/google/python-fire/blob/master/examples/cipher/cipher.py
 if __name__ == '__main__':
