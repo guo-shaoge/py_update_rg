@@ -11,7 +11,7 @@ g_pd_rc_url = 'http://127.0.0.1:2379/resource-manager/api/v1/config/group/'
 # return true if stop==False and got error
 def _check_http_resp(resp, stop = True):
     if resp.status_code != 200:
-        print('[ERROR] got http error. reason: {}, code: {}, text: {}, url: {}'.format(resp.reason, resp.status_code, resp.text, resp.url), file= sys.stderr)
+        print('[ERROR] got http error. reason: {}, code: {}, text: {}, url: {}'.format(resp.reason, resp.status_code, resp.text, resp.url), file= sys.stderr, flush=True)
         if stop:
             exit()
         else:
@@ -53,15 +53,14 @@ def _fetch_n_keyspaces(beg, end):
         else:
             page_token = res_json['next_page_token']
         if len(keyspaces) % 5000 == 0:
-            print('[INFO] fetch n keyspaces process: ' + str(len(keyspaces)))
-            sys.stdout.flush()
+            print('[INFO] fetch n keyspaces process: ' + str(len(keyspaces)), flush=True)
 
     n_keyspaces = []
     if not _beg_end_valid(beg, end):
         n_keyspaces = keyspaces[:]
     else:
         n_keyspaces = keyspaces[beg:end]
-    print('[INFO] fetch n keyspaces done: all: {}, ret: {}'.format(str(len(keyspaces)), str(len(n_keyspaces))))
+    print('[INFO] fetch n keyspaces done: all: {}, ret: {}'.format(str(len(keyspaces)), str(len(n_keyspaces))), flush=True)
     return n_keyspaces
 
 def _fetch_one_keyspace(cluster_id):
@@ -130,6 +129,7 @@ def _handle_by_arg(only_show, rg_jsons, new_fillrate):
         _put_new_rg(rg_jsons)
     else:
         print('unexpected only_show param, got {}'.format(only_show))
+        exit()
 
 def fetch_n_keyspaces(beg=0, end=-1):
     keyspaces = _fetch_n_keyspaces(beg, end)
@@ -155,7 +155,7 @@ def by_n_keyspaces(new_fillrate, beg=0, end=-1, only_show = ''):
             continue
         rg_jsons.append(rg_json)
 
-    print('[INFO] update rg json in mem done: ' + str(len(rg_json)))
+    print('[INFO] update rg json in mem done: ' + str(len(rg_json)), flush=True)
     _handle_by_arg(only_show, rg_jsons, new_fillrate)
 
 # check https://github.com/google/python-fire/blob/master/examples/cipher/cipher.py
