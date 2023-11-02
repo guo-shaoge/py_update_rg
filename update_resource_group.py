@@ -115,9 +115,10 @@ def _change_resource_group(rg_jsons, new_fillrate):
         rg_json['r_u_settings']['r_u']['settings']['fill_rate'] = new_fillrate
     return rg_jsons
 
-def _put_new_rg(new_rg_json):
-    resp = requests.put(g_pd_rc_url, json=new_rg_json)
-    _check_http_resp(resp)
+def _put_new_rg(new_rg_jsons):
+    for new_rg_json in new_rg_jsons:
+        resp = requests.put(g_pd_rc_url, json=new_rg_json)
+        _check_http_resp(resp)
 
 def _handle_by_arg(only_show, rg_jsons, new_fillrate):
     if only_show == 'new':
