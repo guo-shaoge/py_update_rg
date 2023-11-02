@@ -48,7 +48,7 @@ def _fetch_n_keyspaces(beg, end):
         _check_http_resp(resp)
         res_json = resp.json()
         keyspaces.extend(res_json['keyspaces'])
-        if ('next_page_token' not in res_json) or (_beg_end_valid(beg, end) and len(keyspaces) > end):
+        if ('next_page_token' not in res_json) or (_beg_end_valid(beg, end) and len(keyspaces) > end) or (res_json['next_page_token'] == ''):
             break
         else:
             page_token = res_json['next_page_token']
@@ -154,8 +154,10 @@ def by_n_keyspaces(new_fillrate, beg=0, end=-1, only_show = ''):
         if got_err:
             continue
         rg_jsons.append(rg_json)
+        if len(rg_jsons) % 5000 == 0:
+            print('[INFO] update rg json in mem process: ' + str(len(rg_jsons)), flush=True)
 
-    print('[INFO] update rg json in mem done: ' + str(len(rg_json)), flush=True)
+    print('[INFO] update rg json in mem done: ' + str(len(rg_jsons)), flush=True)
     _handle_by_arg(only_show, rg_jsons, new_fillrate)
 
 # check https://github.com/google/python-fire/blob/master/examples/cipher/cipher.py
