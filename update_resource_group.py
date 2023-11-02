@@ -66,7 +66,7 @@ def _fetch_n_keyspaces(beg, end):
         n_keyspaces = alive_keyspaces[:]
     else:
         n_keyspaces = alive_keyspaces[beg:end]
-    print('[INFO] fetch n keyspaces done: all: {}, alive: {}ret: {}'.format(str(len(keyspaces)), str(len(alive_keyspaces), str(len(n_keyspaces))), flush=True)
+    print('[INFO] fetch n keyspaces done: all: {}, alive: {}ret: {}'.format(str(len(keyspaces)), str(len(alive_keyspaces)), str(len(n_keyspaces))), flush=True)
     return n_keyspaces
 
 def _fetch_one_keyspace(cluster_id):
