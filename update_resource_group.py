@@ -53,6 +53,8 @@ def _fetch_n_keyspaces(beg, end):
             break
         else:
             page_token = res_json['next_page_token']
+        if len(keyspaces) > 5000:
+            print('[INFO] fetch n keyspaces process: ' + str(len(keyspaces)))
 
     n_keyspaces = []
     if not _beg_end_valid(beg, end):
