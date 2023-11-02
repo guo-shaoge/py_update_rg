@@ -56,18 +56,19 @@ def _fetch_n_keyspaces(beg, end):
         if len(keyspaces) % 5000 == 0:
             print('[INFO] fetch n keyspaces process: ' + str(len(keyspaces)), flush=True)
 
+    n_keyspaces = []
+    if not _beg_end_valid(beg, end):
+        n_keyspaces = keyspaces[:]
+    else:
+        n_keyspaces = keyspaces[beg:end]
+        
     alive_keyspaces = []
-    for keyspace in keyspaces:
+    for keyspace in n_keyspaces:
         if keyspace['state'] != 'TOMBSTONE':
             alive_keyspaces.append(keyspace)
 
-    n_keyspaces = []
-    if not _beg_end_valid(beg, end):
-        n_keyspaces = alive_keyspaces[:]
-    else:
-        n_keyspaces = alive_keyspaces[beg:end]
-    print('[INFO] fetch n keyspaces done: all: {}, alive: {}ret: {}'.format(str(len(keyspaces)), str(len(alive_keyspaces)), str(len(n_keyspaces))), flush=True)
-    return n_keyspaces
+    print('[INFO] fetch n keyspaces done: all: {}, slice: {}, alive/ret: {}'.format(str(len(keyspaces)), str(len(n_keyspaces)), str(len(alive_keyspaces))), flush=True)
+    return alive_keyspaces
 
 def _fetch_one_keyspace(cluster_id):
     # curl 127.0.0.1:2379/pd/api/v2/keyspaces/uRkenLDNeAmDKjC
