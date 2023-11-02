@@ -1,4 +1,4 @@
-# install third-party lib
+# Install third-party lib
 apt-get install python3
 apt-get install python3-pip
 python3 -m pip install requests
